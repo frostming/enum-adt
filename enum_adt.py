@@ -43,16 +43,26 @@ class ADTMeta(type):
         ns: dict[str, Any],
         **kwargs: Unpack[DataClassAttrs],
     ) -> type:
+        common_methods: dict[str, Any] = {}
+        variants: list[type] = []
         for key, value in ns.items():
-            if key.startswith("_"):
-                continue
-            if not inspect.isclass(value):
-                raise TypeError(f"{name}.{key} is not a class")
-            ns[key] = dataclasses.dataclass(value, **kwargs)
+            if inspect.isclass(value):
+                ns[key] = dataclasses.dataclass(value, **kwargs)
+                variants.append(value)
+            elif inspect.isfunction(value):
+                common_methods[key] = value
+            elif not key.startswith("_"):
+                raise TypeError("Attributes are not allowed in ADT")
+        for variant in variants:
+            for key, value in common_methods.items():
+                setattr(variant, key, value)
         return super().__new__(cls, name, bases, ns)
 
     def __subclasscheck__(self, subclass: type) -> bool:
         return subclass in self.__dict__.values() and dataclasses.is_dataclass(subclass)
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        raise TypeError("ADT cannot be instantiated")
 
     def __instancecheck__(self, instance: Any) -> bool:
         return self.__subclasscheck__(instance.__class__)
