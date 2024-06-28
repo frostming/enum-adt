@@ -21,7 +21,9 @@ def test_adt():
     assert issubclass(MyEnum.Foo, MyEnum)
     assert issubclass(MyEnum.Bar, MyEnum)
     assert isinstance(foo, MyEnum)
+    assert isinstance(foo, MyEnum.Foo)
     assert isinstance(bar, MyEnum)
+    assert isinstance(bar, MyEnum.Bar)
     assert str(foo) == "Foo"
     assert str(bar) == "Bar(bar)"
 
